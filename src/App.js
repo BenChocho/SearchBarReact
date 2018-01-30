@@ -2,55 +2,63 @@ import React, {Component} from 'react';
 import './App.css';
 
 class App extends Component {
-    constructor(props) {
-        super(props);
+    constructor() {
+        super();
         this.state = {
             seriesList: [],
-            seriesEpisodesList: []
+            seriesEpisodesList: [],
+            input: ''
         };
     }
 
-    componentDidMount() {
+    searchChange(e) {
+        this.setState({input: e.target.value});
+    }
 
+    componentDidMount() {
         fetch('seriesList.json',{})
             .then(response => response.json())
             .then(seriesListDepuisFichier => {
                 this.setState({seriesList: seriesListDepuisFichier});
             })
-            .then(fetch('seriesEpisodesList.json',{}))
+            .catch(function (error) {
+                console.log(error);
+            });
+
+        fetch('seriesEpisodesList.json',{})
             .then(response => response.json())
-            .then(seriesEpisodesListDepuisFichier => {
-                this.setState({seriesEpisodesList: seriesEpisodesListDepuisFichier});
+            .then(seriesListDepuisFichier => {
+                this.setState({seriesEpisodesList: seriesListDepuisFichier});
             })
             .catch(function (error) {
                 console.log(error);
-            })
-            .then(function () {
-                alert("j'ai fait ce que j'ai pu");
             });
-
     }
 
     render() {
-        // noinspection JSAnnotator
         return (
             <div>
-                <input onChange={this.searchChange.bind(this)} placeholder={this.state.placeHolder}/>
-                <p>{this.state.searchText}</p>
-                <ul>
-                    {this.state.seriesList.length ?
-                        this.state.seriesList.map(item => <li key={item.id}>{item.seriesName}</li>)
-                        : <li>Loading...</li>
+                <input type="text" value={this.state.input} onChange={this.searchChange.bind(this)} />
+                <div>
+                    {this.state.input.length ?
+                        this.state.seriesList.filter(
+                        a => a.seriesName.toLowerCase().trim().indexOf(this.state.input) > -1)
+                        .map(matchingSeries => <li key={matchingSeries.id}>{matchingSeries.seriesName}
+                        <ol>
+                        {this.state.seriesEpisodesList.filter(b => b.serie_id === matchingSeries.id)
+                            .map(matchingEpisode => matchingEpisode.episodes_list
+                                .filter(getEpisodeName => getEpisodeName.episodeName)
+                                .map(matchingSerieEpisodesLists => <li>{matchingSerieEpisodesLists.episodeName}</li>)
+                            )
+                        }
+                        </ol>
+                        </li>)
+                        : <p>Loading...</p>
                     }
-                </ul>
+                </div>
             </div>
         )
     }
-
-    searchChange(e){
-        this.setState({searchText:e.target.value});
-    }
 }
-
 
 export default App;
